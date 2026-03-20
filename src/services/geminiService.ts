@@ -78,8 +78,8 @@ export async function analyzeLensProduct(
       return JSON.parse(response.text);
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Analysis Error:", error);
-    return null;
+    throw error; // Throw the error so the UI can catch and display it
   }
 }

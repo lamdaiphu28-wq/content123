@@ -51,7 +51,13 @@ export default function App() {
 
   const handleAnalyze = async () => {
     if (!description && !image) {
-      setError('Vui lòng nhập mô tả sản phẩm hoặc tải lên hình ảnh.');
+      setError('Vui lòng nhập mô tả sản phẩm hoặc tải lên hình ảnh để bắt đầu phân tích.');
+      return;
+    }
+
+    // Check for API key (common issue in student projects)
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'MY_GEMINI_API_KEY') {
+      setError('Lỗi cấu hình: API Key chưa được thiết lập. Vui lòng kiểm tra file .env hoặc cài đặt trong AI Studio Secrets.');
       return;
     }
 
@@ -64,11 +70,17 @@ export default function App() {
       if (analysis) {
         setResult(analysis);
       } else {
-        setError('Không thể phân tích sản phẩm. Vui lòng thử lại.');
+        setError('Không thể phân tích sản phẩm. Có thể do nội dung không phù hợp hoặc lỗi kết nối API. Vui lòng thử lại.');
       }
-    } catch (err) {
-      setError('Đã xảy ra lỗi trong quá trình phân tích.');
-      console.error(err);
+    } catch (err: any) {
+      if (err.message?.includes('quota')) {
+        setError('Lỗi: Bạn đã vượt quá hạn mức (quota) của API Key. Vui lòng thử lại sau.');
+      } else if (err.message?.includes('API key')) {
+        setError('Lỗi: API Key không hợp lệ hoặc đã hết hạn.');
+      } else {
+        setError('Đã xảy ra lỗi không xác định trong quá trình phân tích. Vui lòng kiểm tra kết nối mạng.');
+      }
+      console.error('Analysis Error:', err);
     } finally {
       setIsAnalyzing(false);
     }
